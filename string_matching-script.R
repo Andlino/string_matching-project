@@ -16,5 +16,77 @@ teststring <- dirtydata$ref[5]
 
 numerics <- str_extract_all(dirtydata$ref, "\\b[a-zA-Z]{1,5}\\b\\s([\\d]{1,10})")
 character <- str_replace_all(dirtydata$ref, "\\b[a-zA-Z]{1,5}\\b\\s([\\d]{1,10})", "")
+character <- str_remove_all(character, "[^\\w \\xC0-\\xFF]") # non-character words 
 character <- str_remove_all(character, "\\d")
+urls <- str_extract_all(dirtydata$ref, "(<script(\\s|\\S)*?<\\/script>)|(<style(\\s|\\S)*?<\\/style>)|(<!--(\\s|\\S)*?-->)|(<\\/?(\\s|\\S)*?>)")
+
+maybehelpful <- str_extract_all(dirtydata$ref, "[a-zA-Z][a-zA-Z0-9-_]{3,32}") #Must start with an alphabetic character. Can contain the following characters: a-z A-Z 0-9 - and _
+
+#(\w*\s^\w{1}$\s^\w{1}$\s\bet al\b)|(\w*\s^\w{1}$\s\bet al\b)|(\w*\s\bet al\b) <- trying to solve a logic issue here
+
 character <- as.list(character)
+
+
+dirtydata$numerics <- numerics
+dirtydata$characters <- character
+
+
+
+
+#######################################################################################################
+#######################################################################################################
+
+##### Fuzzy matching project #####
+
+library(dplyr)
+library(tidyverse)
+library(gdata)
+library(reshape2)
+library(stringdist)
+library(data.table)
+
+options(stringsAsFactors = FALSE)
+
+
+matchingdata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
+matchingdata2 <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
+
+source1.devices <-as.data.frame(matchingdata$title)
+colnames(source1.devices)[1] <- "name"
+source1.devices$name <-as.character(source1.devices$name)
+
+source2.devices <- as.data.frame(matchingdata2)
+colnames(source2.devices)[1] <-"name"
+source2.devices$name<- as.character(source2.devices$name)
+
+
+distance.methods<-c('lv')
+dist.methods<-list()
+system.time(for(m in 1:length(distance.methods)) {
+  dist.name.enh<-matrix(NA, ncol = length(source2.devices$name),nrow = length(source1.devices$name))
+  for(i in 1:length(source2.devices$name)) {
+    for(j in 1:length(source1.devices$name)) { 
+      dist.name.enh[j,i]<-stringdist(tolower(source2.devices[i,]), tolower(source1.devices[j,]), method = distance.methods[m])      
+      #adist.enhance(source2.devices[i,]$name,source1.devices[j,]$name)
+    }  
+  }
+  dist.methods[[distance.methods[m]]]<-dist.name.enh
+})
+
+match.s1.s2.enh<-NULL
+for(m in 1:length(dist.methods)) {
+  
+  dist.matrix<-as.matrix(dist.methods[[distance.methods[m]]])
+  min.name.enh<-apply(dist.matrix, 1, base::min)
+  for(i in 1:nrow(dist.matrix))
+  {
+    s2.i<-match(min.name.enh[i],dist.matrix[i,])
+    s1.i<-i
+    match.s1.s2.enh<-rbind(data.frame(s2.i=s2.i,s1.i=s1.i,s2name=source2.devices[s2.i,], s1name=source1.devices[s1.i,], adist=min.name.enh[i],method=distance.methods[m]),match.s1.s2.enh)
+  }
+}
+# Let's have a look at the results
+
+
+matched.names.matrix<-dcast(match.s1.s2.enh,s2.i+s1.i+s2name+s1name~method, value.var = "adist")
+View(matched.names.matrix)

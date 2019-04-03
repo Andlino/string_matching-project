@@ -22,7 +22,7 @@ urls <- str_extract_all(dirtydata$ref, "(<script(\\s|\\S)*?<\\/script>)|(<style(
 
 maybehelpful <- str_extract_all(dirtydata$ref, "[a-zA-Z][a-zA-Z0-9-_]{3,32}") #Must start with an alphabetic character. Can contain the following characters: a-z A-Z 0-9 - and _
 
-#(\w*\s^\w{1}$\s^\w{1}$\s\bet al\b)|(\w*\s^\w{1}$\s\bet al\b)|(\w*\s\bet al\b) <- trying to solve a logic issue here
+authors <- str_extract_all(dirtydata$ref, "\\w*\\s\\w{1}\\s\\w{1}\\s\\bet al\\b|\\w*\\s\\w{1}\\s\\bet al\\b|(\\w*\\s\\bet al\\b)")
 
 character <- as.list(character)
 

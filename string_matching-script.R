@@ -5,16 +5,32 @@
 ## total similarity
 ## These should be coded bw 0 and 1 -> Author, Title, Journal, Strings + Year, Volum, Issue, Paper, Page1, Page2 <- These should be coded 0/1/NA
 
-# Loading in data
+# Loading dependencies
 require(stringr)
 require(tidyverse)
 require(stringi)
-require(RSQlite)
+require(RSQLite)
+require(reshape2)
+require(gdata)
+require(stringdist)
+require(data.table)
 
-cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
-dirtydata <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
-dirtiestdata <- read.delim("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
-cleandata <- read.delim("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
+#Creating SQLite database
+db.name <- "testdb"
+c <- dbConnect(RSQLite::SQLite(), paste(db.name,"db",sep='.'))  
+
+# Loading data
+
+#Tim
+cleandata <- read_tsv("E:/R/string_matching_project/clean_refs.txt")
+dirtydata <- read_tsv("E:/R/string_matching_project/dirty_refs.txt")
+dirtiestdata <- read_tsv("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
+cleandata <- read_tsv("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
+#JP
+dirtydata <- read_tsv("D:/syncs/dirty_refs.txt")
+dirtiestdata <- read_tsv("D:/syncs/dirtier_refs.txt")
+cleandata <- read_tsv("D:/syncs/clean_refs.txt")
+#Both
 dirtiestdata <- dirtiestdata %>% mutate(id = row_number())
 
 numerics <- str_extract_all(dirtydata$ref, "\\b[a-zA-Z]{1,5}\\b\\s([\\d]{1,10})")
@@ -57,12 +73,6 @@ mdata$words <- (str_extract(mdata$token, "[aA-zZ]+"))
 
 ##### Fuzzy matching project #####
 
-library(dplyr)
-library(tidyverse)
-library(gdata)
-library(reshape2)
-library(stringdist)
-library(data.table)
 
 options(stringsAsFactors = FALSE)
 

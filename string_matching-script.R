@@ -11,8 +11,7 @@ library(stringr)
 library(dplyr) # or library("tidyverse")
 library(stringi)
 
-testing <- 
-  cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
+cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
 dirtydata <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
 dirtiestdata <- read.delim("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
 cleandata <- read.delim("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
@@ -28,26 +27,30 @@ character <- str_remove_all(character, "[^\\w \\xC0-\\xFF]") # non-character wor
 character <- str_remove_all(character, "\\d")
 urls <- str_extract_all(dirtydata$ref, "(<script(\\s|\\S)*?<\\/script>)|(<style(\\s|\\S)*?<\\/style>)|(<!--(\\s|\\S)*?-->)|(<\\/?(\\s|\\S)*?>)")
 
-maybehelpful <- str_extract_all(dirtydata$ref, "[a-zA-Z][a-zA-Z0-9-_]{3,32}") #Must start with an alphabetic character. Can contain the following characters: a-z A-Z 0-9 - and _
+maybehelpful <- str_extract_all(dirtiestdata$ref, "[a-zA-Z][a-zA-Z0-9-_]{3,32}") #Must start with an alphabetic character. Can contain the following characters: a-z A-Z 0-9 - and _
 
 characters <- as.character(dirtydata$ref)
 characters <- str_replace_all(characters, "  ", " ")
 characters <- as.list(characters)
-authors <- str_extract_all(characters, "\\w*\\s\\w{1}\\s\\w{1}\\s\\bet al\\b|\\w*\\s\\w{1}\\s\\bet al\\b|(\\w*\\s\\bet al\\b)")
+authors <- str_extract_all(dirtiestdata$ref, "\\w*[\\s\\S]\\w{1}.?[\\s\\S]\\w{1}.?[\\s\\S]\\bet al\\b|\\w*[\\s\\S]\\w{1}.?[\\s\\S]\\bet al\\b|(\\w*[\\s\\S]\\bet al\\b)")
 
 dirtydata$numerics <- numerics
 dirtydata$characters <- character
 
-df <- data.frame()
+#######################################################################################################
+#######################################################################################################
+################################### CLEANING DIRTY DATA ###############################################
 
-test <- do.call("rbind", lapply(lotmorenumbers, data.frame, stringsAsFactors = FALSE)) 
-test <- melt(lotmorenumbers)
-colnames(test)[colnames(test)=="value"] <- "token"
-colnames(test)[colnames(test)=="L1"] <- "ID"
-save(test, file = "firstdraft.RData")
-
-test$numeric <- regmatches(test$token, gregexpr("[[:digit:]]+", test$token))
-test$words <- (str_extract(test$token, "[aA-zZ]+"))
+lotmorenumbers <- str_extract_all(dirtiestdata$ref, "\\w*?[\\s\\S].?\\d+")
+authors <- str_extract_all(dirtiestdata$ref, "\\w*[\\s\\S]\\w{1}.?[\\s\\S]\\w{1}.?[\\s\\S]\\bet al\\b|\\w*[\\s\\S]\\w{1}.?[\\s\\S]\\bet al\\b|(\\w*[\\s\\S]\\bet al\\b)")
+characters <- str_extract_all(dirtiestdata$ref, "[a-zA-Z]+")
+#mdata <- do.call("rbind", lapply(lotmorenumbers, data.frame, stringsAsFactors = FALSE)) 
+mdata <- melt(lotmorenumbers)
+#mdata <- tibble::rowid_to_column(mdata, "ID")
+colnames(mdata)[colnames(mdata)=="value"] <- "token"
+colnames(mdata)[colnames(mdata)=="L1"] <- "ID"
+mdata$numeric <- regmatches(mdata$token, gregexpr("[[:digit:]]+", mdata$token))
+mdata$words <- (str_extract(mdata$token, "[aA-zZ]+"))
 
 #######################################################################################################
 #######################################################################################################
@@ -67,11 +70,11 @@ options(stringsAsFactors = FALSE)
 matchingdata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
 matchingdata2 <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
 
-source1.devices <-as.data.frame(matchingdata$title)
+source1.devices <- as.data.frame(test$words)
 colnames(source1.devices)[1] <- "name"
 source1.devices$name <-as.character(source1.devices$name)
 
-source2.devices <- as.data.frame(matchingdata2)
+source2.devices <- as.data.frame(dirtiestdata$ref)
 colnames(source2.devices)[1] <-"name"
 source2.devices$name<- as.character(source2.devices$name)
 
@@ -106,3 +109,12 @@ for(m in 1:length(dist.methods)) {
 
 matched.names.matrix<-dcast(match.s1.s2.enh,s2.i+s1.i+s2name+s1name~method, value.var = "adist")
 View(matched.names.matrix)
+
+
+lotmorenumbers <- str_extract_all(dirtiestdata$ref, "\\w*?[\\s\\S].?\\d+")
+test <- melt(lotmorenumbers)
+colnames(test)[colnames(test)=="value"] <- "token"
+colnames(test)[colnames(test)=="L1"] <- "ID"
+test$numeric <- regmatches(test$token, gregexpr("[[:digit:]]+", test$token))
+test$words <- (str_extract(test$token, "[aA-zZ]+"))
+View(test)

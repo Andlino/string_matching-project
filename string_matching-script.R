@@ -8,13 +8,21 @@
 # Loading in data
 install.packages("stringr")
 library(stringr)
+library(dplyr) # or library("tidyverse")
+library(stringi)
 
-
-cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
+testing <- 
+  cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
 dirtydata <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
-teststring <- dirtydata$ref[5]
+dirtiestdata <- read.delim("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
+cleandata <- read.delim("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
+dirtiestdata <- dirtiestdata %>% mutate(id = row_number())
 
 numerics <- str_extract_all(dirtydata$ref, "\\b[a-zA-Z]{1,5}\\b\\s([\\d]{1,10})")
+possiblenumerics <- str_extract_all(dirtiestdata$ref, "\\b[a-zA-Z]+?\\b(\\s|\\.|\\,|\\-|)([\\d]+)")
+doi <- str_extract_all(dirtiestdata$ref, "\\bdoi\\b\\:\\d+\\.\\d+\\/[\\s\\S]+?\\s")
+lotmorenumbers <- str_extract_all(dirtiestdata$ref, "\\w*?[\\s\\S].?\\d+")
+
 character <- str_replace_all(dirtydata$ref, "\\b[a-zA-Z]{1,5}\\b\\s([\\d]{1,10})", "")
 character <- str_remove_all(character, "[^\\w \\xC0-\\xFF]") # non-character words 
 character <- str_remove_all(character, "\\d")
@@ -30,8 +38,16 @@ authors <- str_extract_all(characters, "\\w*\\s\\w{1}\\s\\w{1}\\s\\bet al\\b|\\w
 dirtydata$numerics <- numerics
 dirtydata$characters <- character
 
+df <- data.frame()
 
+test <- do.call("rbind", lapply(lotmorenumbers, data.frame, stringsAsFactors = FALSE)) 
+test <- melt(lotmorenumbers)
+colnames(test)[colnames(test)=="value"] <- "token"
+colnames(test)[colnames(test)=="L1"] <- "ID"
+save(test, file = "firstdraft.RData")
 
+test$numeric <- regmatches(test$token, gregexpr("[[:digit:]]+", test$token))
+test$words <- (str_extract(test$token, "[aA-zZ]+"))
 
 #######################################################################################################
 #######################################################################################################

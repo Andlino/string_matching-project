@@ -6,10 +6,10 @@
 ## These should be coded bw 0 and 1 -> Author, Title, Journal, Strings + Year, Volum, Issue, Paper, Page1, Page2 <- These should be coded 0/1/NA
 
 # Loading in data
-install.packages("stringr")
-library(stringr)
-library(dplyr) # or library("tidyverse")
-library(stringi)
+require(stringr)
+require(tidyverse)
+require(stringi)
+require(RSQlite)
 
 cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
 dirtydata <- read.delim("E:/R/string_matching_project/dirty_refs.txt")

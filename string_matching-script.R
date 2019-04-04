@@ -14,6 +14,7 @@ require(reshape2)
 require(gdata)
 require(stringdist)
 require(data.table)
+require("R.utils")
 
 #Creating SQLite database
 db.name <- "testdb"
@@ -26,6 +27,16 @@ dbClearResult(r)
 r <- dbSendStatement(c,"create table if not exists str_token (id integer primary key autoincrement,token varchar(255))")
 dbClearResult(r)
 r <- dbSendQuery(c,"create index if not exists str_token_idx on str_token(token)")
+dbClearResult(r)
+r <- dbSendStatement(c,"create table if not exists dirty_ref (id integer primary key)")
+dbClearResult(r)
+r <- dbSendStatement(c,"create table if not exists dirty_num (id integer primary key, ref_id integer, num_token_id integer)")
+dbClearResult(r)
+r <- dbSendStatement(c,"create table if not exists dirty_str (id integer primary key, ref_id integer, str_token_id integer)")
+dbClearResult(r)
+r <- dbSendQuery(c,"create index if not exists dirty_num_ref_idx on dirty_num(ref_id); create index if not exists dirty_num_token_idx on dirty_num(num_token_id); ")
+dbClearResult(r)
+r <- dbSendQuery(c,"create index if not exists dirty_str_ref_idx on dirty_str(ref_id); create index if not exists dirty_str_token_idx on dirty_str(str_token_id); ")
 dbClearResult(r)
 
 # Loading data
@@ -74,8 +85,88 @@ mdata <- melt(lotmorenumbers)
 #mdata <- tibble::rowid_to_column(mdata, "ID")
 colnames(mdata)[colnames(mdata)=="value"] <- "token"
 colnames(mdata)[colnames(mdata)=="L1"] <- "ID"
-mdata$numeric <- regmatches(mdata$token, gregexpr("[[:digit:]]+", mdata$token))
+#temp note: changed $numeric to $num_token as numeric is a keyword
+mdata$num_token <- regmatches(mdata$token, gregexpr("[[:digit:]]+", mdata$token))
 mdata$words <- (str_extract(mdata$token, "[aA-zZ]+"))
+
+#clean DB before executing
+r <- dbSendStatement(c,"delete from dirty_ref")
+dbClearResult(r)
+r <- dbSendStatement(c,"delete from num_token")
+dbClearResult(r)
+r <- dbSendStatement(c,"delete from str_token")
+dbClearResult(r)
+r <- dbSendStatement(c,"delete from dirty_num")
+dbClearResult(r)
+r <- dbSendStatement(c,"delete from dirty_str")
+dbClearResult(r)
+
+pb <- ProgressBar(max=100, ticks=10, stepLength=100/nrow(mdata), newlineWhenDone=TRUE)
+reset(pb)
+#insert tokens into DB
+for (i in 1:nrow(mdata)) {
+  x <- mdata[i,]
+  # Check and insert reference
+  r <- dbSendQuery(c,"select id from dirty_ref where id = ?",param=c(x$ID))
+  rs <- dbFetch(r)
+  dbClearResult(r)
+  if (nrow(rs) == 0) {
+    r <- dbSendStatement(c,"insert into dirty_ref (id) values (?)",param=c(x$ID))
+    dbClearResult(r)
+  }
+  
+  # Check and insert numerical token
+  r <- dbSendQuery(c,"select id from num_token where token = ?",param=c(x$num_token))
+  rs <- dbFetch(r)
+  dbClearResult(r)
+  if (nrow(rs) == 0) {
+    r <- dbSendStatement(c,"insert into num_token (token) values (?)",param=c(x$num_token))
+    dbClearResult(r)
+    r <- dbSendStatement(c,"select last_insert_rowid()")
+    rs <- dbFetch(r)
+    num_id <- rs[1,]
+    dbClearResult(r)
+  } else {
+    num_id <- rs$id
+  }
+  
+  # Check and insert numerical relation
+  r <- dbSendQuery(c,"select id from dirty_num where ref_id = ? and num_token_id = ?",param=c(x$ID,num_id))
+  rs <- dbFetch(r)
+  dbClearResult(r)
+  if (nrow(rs) == 0) {
+    r <- dbSendStatement(c,"insert into dirty_num (ref_id,num_token_id) values (?,?)",param=c(x$ID,num_id))
+    dbClearResult(r)
+  }
+  
+  # Check and insert string token
+  if (!is.na(x$words)) {
+    r <- dbSendQuery(c,"select id from str_token where token = ?",param=c(x$words))
+    rs <- dbFetch(r)
+    dbClearResult(r)
+    if (nrow(rs) == 0) {
+      r <- dbSendStatement(c,"insert into str_token (token) values (?)",param=c(x$words))
+      dbClearResult(r)
+      r <- dbSendStatement(c,"select last_insert_rowid()")
+      rs <- dbFetch(r)
+      str_id <- rs[1,]
+      dbClearResult(r)
+    } else {
+      str_id <- rs$id
+    }
+    
+    # Check and insert string relation
+    r <- dbSendQuery(c,"select id from dirty_str where ref_id = ? and str_token_id = ?",param=c(x$ID,str_id))
+    rs <- dbFetch(r)
+    dbClearResult(r)
+    if (nrow(rs) == 0) {
+      r <- dbSendStatement(c,"insert into dirty_str (ref_id,str_token_id) values (?,?)",param=c(x$ID,str_id))
+      dbClearResult(r)
+    }
+  }
+  increase(pb)
+}
+
 
 #######################################################################################################
 #######################################################################################################

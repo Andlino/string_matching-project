@@ -17,7 +17,16 @@ require(data.table)
 
 #Creating SQLite database
 db.name <- "testdb"
-c <- dbConnect(RSQLite::SQLite(), paste(db.name,"db",sep='.'))  
+c <- dbConnect(RSQLite::SQLite(), paste(db.name,"db",sep='.'))
+
+r <- dbSendStatement(c,"create table if not exists num_token (id integer primary key autoincrement,token varchar(255))")
+dbClearResult(r)
+r <- dbSendStatement(c,"create index if not exists num_token_idx on num_token(token)")
+dbClearResult(r)
+r <- dbSendStatement(c,"create table if not exists str_token (id integer primary key autoincrement,token varchar(255))")
+dbClearResult(r)
+r <- dbSendQuery(c,"create index if not exists str_token_idx on str_token(token)")
+dbClearResult(r)
 
 # Loading data
 

@@ -5,21 +5,6 @@
 ## total similarity
 ## These should be coded bw 0 and 1 -> Author, Title, Journal, Strings + Year, Volum, Issue, Paper, Page1, Page2 <- These should be coded 0/1/NA
 
-<<<<<<< HEAD
-# Loading in data
-#install.packages("stringr")
-require(stringr)
-require(dplyr) # or library("tidyverse")
-require(stringi)
-require(RSQLite)
-
-
-
-cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
-dirtydata <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
-dirtiestdata <- read.delim("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
-cleandata <- read.delim("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
-=======
 # Loading dependencies
 require(stringr)
 require(tidyverse)
@@ -30,6 +15,13 @@ require(gdata)
 require(stringdist)
 require(data.table)
 require("R.utils")
+
+
+# Loading in data
+cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
+dirtydata <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
+dirtiestdata <- read.delim("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
+cleandata <- read.delim("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
 
 #Creating SQLite database
 db.name <- "testdb"
@@ -66,7 +58,7 @@ dirtydata <- read_tsv("D:/syncs/dirty_refs.txt")
 dirtiestdata <- read_tsv("D:/syncs/dirtier_refs.txt")
 cleandata <- read_tsv("D:/syncs/clean_refs.txt")
 #Both
->>>>>>> f31e8c4c5e19e5b7280aa7cfbd8617320b9bc604
+
 dirtiestdata <- dirtiestdata %>% mutate(id = row_number())
 
 numerics <- str_extract_all(dirtydata$ref, "\\b[a-zA-Z]{1,5}\\b\\s([\\d]{1,10})")

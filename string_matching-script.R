@@ -16,13 +16,6 @@ require(stringdist)
 require(data.table)
 require("R.utils")
 
-
-# Loading in data
-cleandata <- read.delim("E:/R/string_matching_project/clean_refs.txt")
-dirtydata <- read.delim("E:/R/string_matching_project/dirty_refs.txt")
-dirtiestdata <- read.delim("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
-cleandata <- read.delim("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
-
 #Creating SQLite database
 db.name <- "testdb"
 c <- dbConnect(RSQLite::SQLite(), paste(db.name,"db",sep='.'))
@@ -41,9 +34,9 @@ r <- dbSendStatement(c,"create table if not exists dirty_num (id integer primary
 dbClearResult(r)
 r <- dbSendStatement(c,"create table if not exists dirty_str (id integer primary key, ref_id integer, str_token_id integer)")
 dbClearResult(r)
-r <- dbSendQuery(c,"create index if not exists dirty_num_ref_idx on dirty_num(ref_id); create index if not exists dirty_num_token_idx on dirty_num(num_token_id); ")
+r <- dbSendQuery(c,"create index if not exists dirty_num_ref_idx on dirty_num(ref_id,num_token_id);")
 dbClearResult(r)
-r <- dbSendQuery(c,"create index if not exists dirty_str_ref_idx on dirty_str(ref_id); create index if not exists dirty_str_token_idx on dirty_str(str_token_id); ")
+r <- dbSendQuery(c,"create index if not exists dirty_str_ref_idx on dirty_str(ref_id,str_token_id);")
 dbClearResult(r)
 
 # Loading data
@@ -54,9 +47,9 @@ dirtydata <- read_tsv("E:/R/string_matching_project/dirty_refs.txt")
 dirtiestdata <- read_tsv("C:/Users/au615270/Documents/Matching project/data/dirtier_refs.txt")
 cleandata <- read_tsv("C:/Users/au615270/Documents/Matching project/data/clean_refs.txt")
 #JP
-dirtydata <- read_tsv("D:/syncs/dirty_refs.txt")
-dirtiestdata <- read_tsv("D:/syncs/dirtier_refs.txt")
-cleandata <- read_tsv("D:/syncs/clean_refs.txt")
+dirtydata <- read_tsv("C:/Users/jpa/Desktop/dirty_refs.txt")
+dirtiestdata <- read_tsv("C:/Users/jpa/Desktop/dirtier_refs.txt")
+cleandata <- read_tsv("C:/Users/jpa/Desktop/clean_refs.txt")
 #Both
 
 dirtiestdata <- dirtiestdata %>% mutate(id = row_number())

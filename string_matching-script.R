@@ -168,6 +168,10 @@ for (i in 1:nrow(mdata)) {
   increase(pb)
 }
 
+#EXAMPLE LOOKUP
+
+r <- dbGetQuery(c,"select distinct ref_id from num_token a join dirty_num b on a.id = b.num_token_id where token = ? or token = ?",param=c("1970","13"))
+(r)
 
 #######################################################################################################
 #######################################################################################################
